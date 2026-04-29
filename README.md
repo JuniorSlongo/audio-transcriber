@@ -12,8 +12,18 @@ Este projeto faz:
 
 Arquivos de saida gerados por padrao:
 
-- `outputs/transcricao.txt`
-- `outputs/transcricao_com_tempos.txt`
+- `outputs/<nome_do_audio>_transcricao.txt`
+- `outputs/<nome_do_audio>_transcricao_com_tempos.txt`
+
+Exemplo para `audios/reuniao.mp3`:
+
+- `outputs/reuniao_transcricao.txt`
+- `outputs/reuniao_transcricao_com_tempos.txt`
+
+Se esses arquivos ja existirem, o sistema adiciona data/hora ao nome para nao sobrescrever, por exemplo:
+
+- `outputs/reuniao_20260429_153010_transcricao.txt`
+- `outputs/reuniao_20260429_153010_transcricao_com_tempos.txt`
 
 ## Como Funciona
 
@@ -24,7 +34,8 @@ O fluxo da CLI e:
 3. Adiciona `ffmpeg/bin` ao `PATH` em tempo de execucao.
 4. Carrega o modelo Whisper escolhido.
 5. Transcreve o audio com `language="pt"` (portugues fixo).
-6. Salva dois arquivos de saida no diretorio definido.
+6. Salva dois arquivos de saida no diretorio definido, com nome baseado no audio.
+7. Se ja existir saida com esse nome, gera um nome unico com timestamp.
 
 Observacoes importantes:
 
@@ -183,8 +194,8 @@ audio-transcriber --audio "audios/aula.m4a" --output-dir "outputs/aula_01"
 
 Saidas esperadas nesse caso:
 
-- `outputs/aula_01/transcricao.txt`
-- `outputs/aula_01/transcricao_com_tempos.txt`
+- `outputs/aula_01/aula_transcricao.txt`
+- `outputs/aula_01/aula_transcricao_com_tempos.txt`
 
 ## Exemplos Completos
 
@@ -210,9 +221,21 @@ Resultado:
 - Menos tempo de execucao comparado ao `medium`.
 - Arquivos separados por execucao.
 
-## Formato dos Arquivos de Saida
+## Formato e Nome dos Arquivos de Saida
 
-### `transcricao.txt`
+Padrao de nomes:
+
+- `<nome_do_audio>_transcricao.txt`
+- `<nome_do_audio>_transcricao_com_tempos.txt`
+
+Exemplo:
+
+- Audio de entrada: `audios/minha_entrevista.m4a`
+- Saidas: `minha_entrevista_transcricao.txt` e `minha_entrevista_transcricao_com_tempos.txt`
+
+Em caso de conflito de nome (arquivo ja existente), e adicionado um sufixo de timestamp.
+
+### `<nome_do_audio>_transcricao.txt`
 
 Contem apenas o texto final consolidado.
 
@@ -222,7 +245,7 @@ Exemplo:
 Bom dia, vamos iniciar a reuniao de planejamento do projeto...
 ```
 
-### `transcricao_com_tempos.txt`
+### `<nome_do_audio>_transcricao_com_tempos.txt`
 
 Contem cada segmento com inicio e fim no formato `HH:MM:SS`.
 
@@ -283,7 +306,8 @@ Como resolver:
 ## Boas Praticas de Uso
 
 - Mantenha os audios organizados em subpastas por data ou projeto.
-- Use `--output-dir` diferente por execucao para nao sobrescrever arquivos.
+- O sistema nao sobrescreve automaticamente transcricoes anteriores do mesmo audio.
+- Se quiser organizar ainda mais, use `--output-dir` com pastas por lote/projeto.
 - Se precisar de mais contexto temporal, priorize `transcricao_com_tempos.txt`.
 - Comece com `small` para teste rapido e depois rode com `medium` para versao final.
 

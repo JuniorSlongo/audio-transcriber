@@ -1,5 +1,7 @@
 from pathlib import Path
 import os
+import re
+from datetime import datetime
 
 
 def get_project_root() -> Path:
@@ -24,3 +26,23 @@ def format_timestamp(seconds: float) -> str:
     secs = int(seconds % 60)
 
     return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
+def build_output_paths(audio_path: Path, output_dir: Path) -> tuple[Path, Path]:
+    safe_stem = sanitize_filename(audio_path.stem)
+
+    plain_path = output_dir / f"{safe_stem}_transcricao.txt"
+    timestamps_path = output_dir / f"{safe_stem}_transcricao_com_tempos.txt"
+
+    # If files already exist, append a timestamp to keep previous runs.
+    if plain_path.exists() or timestamps_path.exists():
+        suffix = datetime.now().strftime("%Y%m%d_%H%M%S")
+        plain_path = output_dir / f"{safe_stem}_{suffix}_transcricao.txt"
+        timestamps_path = output_dir / f"{safe_stem}_{suffix}_transcricao_com_tempos.txt"
+
+    return plain_path, timestamps_path
+
+
+def sanitize_filename(value: str) -> str:
+    safe_value = re.sub(r"[^A-Za-z0-9_-]+", "_", value).strip("_")
+    return safe_value or "audio"

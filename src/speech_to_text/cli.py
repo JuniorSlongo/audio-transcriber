@@ -2,7 +2,11 @@ from pathlib import Path
 import argparse
 
 from speech_to_text.transcriber import AudioTranscriber
-from speech_to_text.utils import configure_local_ffmpeg, get_project_root
+from speech_to_text.utils import (
+    build_output_paths,
+    configure_local_ffmpeg,
+    get_project_root,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -47,19 +51,24 @@ def main() -> None:
     transcriber = AudioTranscriber(model_name=args.model)
     result = transcriber.transcribe(audio_path)
 
+    plain_output_path, timestamps_output_path = build_output_paths(
+        audio_path=audio_path,
+        output_dir=output_dir,
+    )
+
     transcriber.save_plain_text(
         result,
-        output_dir / "transcricao.txt"
+        plain_output_path,
     )
 
     transcriber.save_with_timestamps(
         result,
-        output_dir / "transcricao_com_tempos.txt"
+        timestamps_output_path,
     )
 
     print("Transcrição concluída.")
-    print(f"Arquivo gerado: {output_dir / 'transcricao.txt'}")
-    print(f"Arquivo gerado: {output_dir / 'transcricao_com_tempos.txt'}")
+    print(f"Arquivo gerado: {plain_output_path}")
+    print(f"Arquivo gerado: {timestamps_output_path}")
 
 
 if __name__ == "__main__":
