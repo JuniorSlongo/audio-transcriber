@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+src/audio_transcriber.egg-info/PKG-INFO
+src/audio_transcriber.egg-info/SOURCES.txt
+src/audio_transcriber.egg-info/dependency_links.txt
+src/audio_transcriber.egg-info/entry_points.txt
+src/audio_transcriber.egg-info/top_level.txt
+src/speech_to_text/__init__.py
+src/speech_to_text/cli.py
+src/speech_to_text/transcriber.py
+src/speech_to_text/utils.py

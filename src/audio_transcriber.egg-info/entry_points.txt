@@ -1,0 +1,2 @@
+[console_scripts]
+audio-transcriber = speech_to_text.cli:main
