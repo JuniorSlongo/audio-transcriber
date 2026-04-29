@@ -1,0 +1,22 @@
+# Ambiente virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Áudios e saídas
+audios/
+outputs/
+
+# FFmpeg local
+ffmpeg/
+
+# IDE/Sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
