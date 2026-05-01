@@ -1,9 +1,8 @@
 from pathlib import Path
 import argparse
 
-from speech_to_text.transcriber import AudioTranscriber
+from speech_to_text.queue_manager import TranscriptionQueue
 from speech_to_text.utils import (
-    build_output_paths,
     configure_local_ffmpeg,
     get_project_root,
 )
@@ -16,8 +15,14 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument(
         "--audio",
-        required=True,
-        help="Caminho do arquivo de áudio. Ex: audios/Nova Gravacao.m4a"
+        action="append",
+        dest="audios",
+        help="Caminho de um arquivo de áudio. Pode ser usado múltiplas vezes. Ex: --audio audios/audio1.m4a --audio audios/audio2.m4a"
+    )
+
+    parser.add_argument(
+        "--audio-dir",
+        help="Caminho de um diretório com múltiplos áudios para transcrever em fila."
     )
 
     parser.add_argument(
@@ -33,42 +38,58 @@ def parse_args() -> argparse.Namespace:
         help="Pasta onde os arquivos de saída serão salvos."
     )
 
+    parser.add_argument(
+        "--save-log",
+        action="store_true",
+        help="Salva um log JSON da fila após o processamento."
+    )
+
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
 
+    # Validar argumentos
+    if not args.audios and not args.audio_dir:
+        print("Erro: Especifique pelo menos um arquivo (--audio) ou um diretório (--audio-dir)")
+        return
+
     project_root = get_project_root()
     configure_local_ffmpeg()
 
-    audio_path = project_root / args.audio
     output_dir = project_root / args.output_dir
 
+    # Criar fila de transcrição
+    queue = TranscriptionQueue(model_name=args.model)
+
     print(f"Modelo selecionado: {args.model}")
-    print(f"Áudio: {audio_path}")
+    print(f"Diretório de saída: {output_dir}\n")
 
-    transcriber = AudioTranscriber(model_name=args.model)
-    result = transcriber.transcribe(audio_path)
+    # Adicionar arquivos à fila
+    if args.audios:
+        for audio in args.audios:
+            audio_path = project_root / audio
+            try:
+                queue.add_task(audio_path, output_dir)
+            except FileNotFoundError as e:
+                print(f"✗ Erro: {e}")
 
-    plain_output_path, timestamps_output_path = build_output_paths(
-        audio_path=audio_path,
-        output_dir=output_dir,
-    )
+    if args.audio_dir:
+        audio_dir_path = project_root / args.audio_dir
+        if not audio_dir_path.exists():
+            print(f"✗ Erro: Diretório não encontrado: {audio_dir_path}")
+            return
+        print(f"Adicionando áudios do diretório: {audio_dir_path}\n")
+        queue.add_tasks_from_directory(audio_dir_path, output_dir)
 
-    transcriber.save_plain_text(
-        result,
-        plain_output_path,
-    )
+    # Processar fila
+    queue.process_queue()
 
-    transcriber.save_with_timestamps(
-        result,
-        timestamps_output_path,
-    )
-
-    print("Transcrição concluída.")
-    print(f"Arquivo gerado: {plain_output_path}")
-    print(f"Arquivo gerado: {timestamps_output_path}")
+    # Salvar log se solicitado
+    if args.save_log:
+        log_path = output_dir / "transcription_log.json"
+        queue.save_queue_log(log_path)
 
 
 if __name__ == "__main__":
